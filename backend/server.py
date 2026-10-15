@@ -27,6 +27,9 @@ MAX_MESSAGE_CHARS = 4000
 # leave no room for the visible answer, which showed up as "[No text returned]".
 MAX_OUTPUT_TOKENS = 4000
 
+@app.get("/")
+def hello_world():
+    return "Hello World"
 
 @app.post("/api/chat")
 def chat():
