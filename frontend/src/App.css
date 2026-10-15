@@ -58,32 +58,49 @@ body {
 .search-bar input::-webkit-search-cancel-button { -webkit-appearance: none; }
 .search-bar input:disabled { opacity: 0.6; }
 
-/* Card */
-.workshop-card {
-  padding: 20px;
-  border: 1px solid var(--card-stroke);
-  border-radius: 24px;
-}
-.workshop-card__content {
+/* Chat thread */
+.chat-thread {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 10px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px 2px; /* room so focus outlines/scrollbar don't clip bubbles */
 }
-.workshop-card h1 {
+.chat-thread__empty {
   margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 12px;
+  color: var(--muted);
 }
-.workshop-card__output { width: 100%; }
-.workshop-card p {
+
+/* Bubbles: one chat message each, aligned by who sent it */
+.bubble {
+  max-width: 85%;
+  padding: 10px 16px;
+  border: 1px solid var(--card-stroke);
+  border-radius: 18px;
+}
+.bubble p {
   margin: 0;
   font-size: 12px;
   line-height: 1.3;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+.bubble--user {
+  align-self: flex-end;
+  background: var(--hover);
+  border-color: var(--stroke);
+}
+.bubble--assistant {
+  align-self: flex-start;
+}
+.bubble--error {
+  align-self: flex-start;
+  border-color: #b00020;
+  color: #b00020;
+}
+.bubble--pending p { color: var(--muted); }
 
 /* Button */
 .workshop-button {
