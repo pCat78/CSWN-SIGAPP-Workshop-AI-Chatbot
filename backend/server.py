@@ -13,6 +13,8 @@ from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from openai import OpenAI, OpenAIError
 
+from tools import LOCAL_FUNCTIONS, TOOLS
+
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
@@ -29,19 +31,6 @@ MAX_MESSAGE_CHARS = 4000
 # max_output_tokens. With a small limit (500) they can use the whole budget and
 # leave no room for the visible answer, which showed up as "[No text returned]".
 MAX_OUTPUT_TOKENS = 4000
-
-# Custom function tool that we created.
-def add(a, b):
-    return a + b
-
-# Maps the tool name the model asks for to the Python function that handles
-# it. Add more entries here if you wire up additional custom functions.
-LOCAL_FUNCTIONS = {"add": add}
-
-# Tool definitions (what the model is told it can call) live in tools.json,
-# next to this file, so the schema can be edited without touching the code.
-with open(os.path.join(os.path.dirname(__file__), "tools.json")) as f:
-    TOOLS = json.load(f)
 
 # Safety cap so a confused model can't loop us into calling OpenAI forever.
 MAX_FUNCTION_CALL_ROUNDS = 5
