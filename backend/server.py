@@ -44,10 +44,34 @@ def chat():
     try:
         response = client.responses.create(
             model="gpt-5-nano",
+            
+            #websearch tool from openai api
+            tools=[
+                {
+                    "type": "web_search", #just need this one if going for the most basic
+                    "filters": {
+                        "allowed_domains": [
+                            "pubmed.ncbi.nlm.nih.gov",
+                            "clinicaltrials.gov",
+                            "www.who.int",
+                            "www.cdc.gov",
+                            "www.fda.gov",
+                        ],
+                        "blocked_domains": [
+                            "reddit.com",
+                            "quora.com",
+                            "wikipedia.org",
+                        ],
+                    },
+                },
+                 
+            ],
+            include=["web_search_call.action.sources"], 
+    
             input=user_input,
             previous_response_id=previous_response_id,
             max_output_tokens=MAX_OUTPUT_TOKENS,
-            reasoning={"effort": "minimal"},  # spend tokens on the answer, not thinking
+            reasoning={"effort": "low"},
         )
     except OpenAIError as error:
         # Log details on the server; don't expose them to the browser.
