@@ -1,0 +1,108 @@
+:root {
+  --bg: #f7f7f5;
+  --ink: #000;
+  --stroke: #707070;
+  --card-stroke: #dcdcd9;
+  --muted: #757575;
+  --hover: #ecece8;
+  --press: #deded9;
+}
+
+* { box-sizing: border-box; }
+html, body, #root { min-height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.page {
+  display: flex;
+  min-height: 100vh;
+  padding: 16px;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(517px, 100%);
+  margin: auto; /* centers the pair, and lets a tall card scroll instead of clip */
+}
+
+/* Search bar */
+.search-bar { display: block; }
+.search-bar input {
+  display: block;
+  width: 100%;
+  height: 36px;
+  padding: 0 20px;
+  font: 400 12px/1 "Inter", system-ui, sans-serif;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.search-bar input::placeholder { color: var(--muted); opacity: 1; }
+.search-bar input::-webkit-search-cancel-button { -webkit-appearance: none; }
+.search-bar input:disabled { opacity: 0.6; }
+
+/* Card */
+.workshop-card {
+  padding: 20px;
+  border: 1px solid var(--card-stroke);
+  border-radius: 24px;
+}
+.workshop-card__content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+.workshop-card h1 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.workshop-card__output { width: 100%; }
+.workshop-card p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Button */
+.workshop-button {
+  height: 36px;
+  min-width: 66px;
+  padding: 0 20px;
+  font: 400 12px/1 "Inter", system-ui, sans-serif;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid var(--stroke);
+  border-radius: 18px;
+  cursor: pointer;
+}
+.workshop-button--hover { background: var(--hover); }
+.workshop-button--click { background: var(--press); border-color: var(--ink); }
+.workshop-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.search-bar input:focus-visible,
+.workshop-button:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
