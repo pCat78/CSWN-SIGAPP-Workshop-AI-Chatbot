@@ -5,6 +5,8 @@ Install:  python -m pip install -U flask openai python-dotenv
 Run:      python server.py     (serves on http://127.0.0.1:5000)
 """
 
+import json
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -19,6 +21,7 @@ if not api_key:
 
 client = OpenAI(api_key=api_key)
 app = Flask(__name__)
+app.logger.setLevel(logging.INFO)  # Flask defaults to WARNING, which hides .info() logs
 app.config["MAX_CONTENT_LENGTH"] = 32 * 1024  # reject oversized requests
 MAX_MESSAGE_CHARS = 4000
 
@@ -26,6 +29,22 @@ MAX_MESSAGE_CHARS = 4000
 # max_output_tokens. With a small limit (500) they can use the whole budget and
 # leave no room for the visible answer, which showed up as "[No text returned]".
 MAX_OUTPUT_TOKENS = 4000
+
+# Custom function tool that we created.
+def add(a, b):
+    return a + b
+
+# Maps the tool name the model asks for to the Python function that handles
+# it. Add more entries here if you wire up additional custom functions.
+LOCAL_FUNCTIONS = {"add": add}
+
+# Tool definitions (what the model is told it can call) live in tools.json,
+# next to this file, so the schema can be edited without touching the code.
+with open(os.path.join(os.path.dirname(__file__), "tools.json")) as f:
+    TOOLS = json.load(f)
+
+# Safety cap so a confused model can't loop us into calling OpenAI forever.
+MAX_FUNCTION_CALL_ROUNDS = 5
 
 @app.get("/")
 def hello_world():
@@ -47,35 +66,60 @@ def chat():
     try:
         response = client.responses.create(
             model="gpt-5-nano",
-            
-            #websearch tool from openai api
-            tools=[
-                {
-                    "type": "web_search", #just need this one if going for the most basic
-                    "filters": {
-                        "allowed_domains": [
-                            "pubmed.ncbi.nlm.nih.gov",
-                            "clinicaltrials.gov",
-                            "www.who.int",
-                            "www.cdc.gov",
-                            "www.fda.gov",
-                        ],
-                        "blocked_domains": [
-                            "reddit.com",
-                            "quora.com",
-                            "wikipedia.org",
-                        ],
-                    },
-                },
-                 
-            ],
-            include=["web_search_call.action.sources"], 
-    
+            tools=TOOLS,
+            include=["web_search_call.action.sources"],
             input=user_input,
             previous_response_id=previous_response_id,
             max_output_tokens=MAX_OUTPUT_TOKENS,
             reasoning={"effort": "low"},
         )
+
+        # web_search is hosted: OpenAI runs it and hands back a finished
+        # message. A "function" tool like add() is NOT run by OpenAI -- the
+        # model instead returns one or more "function_call" output items and
+        # waits. We have to execute them ourselves and send the results back
+        # before the model can produce its final text reply.
+        rounds = 0
+        while rounds < MAX_FUNCTION_CALL_ROUNDS:
+            calls = [item for item in response.output if item.type == "function_call"]
+            if not calls:
+                break
+            rounds += 1
+
+            outputs = []
+            for call in calls:
+                handler = LOCAL_FUNCTIONS.get(call.name)
+                try:
+                    args = json.loads(call.arguments)
+                    arg_str = ", ".join(f"{key}={value!r}" for key, value in args.items())
+                    app.logger.info("[TOOL] Running %s(%s)", call.name, arg_str)
+
+                    if handler is None:
+                        result = {"error": f"Unknown function: {call.name}"}
+                    else:
+                        result = handler(**args)
+                except Exception as error:  # bad/missing args from the model
+                    result = {"error": f"Could not run {call.name}: {error}"}
+
+                outputs.append(
+                    {
+                        "type": "function_call_output",
+                        "call_id": call.call_id,
+                        "output": json.dumps(result),
+                    }
+                )
+
+            # previous_response_id picks up the conversation where this
+            # response left off, so we only need to send the function
+            # results here -- not the original question again.
+            response = client.responses.create(
+                model="gpt-5-nano",
+                tools=TOOLS,
+                input=outputs,
+                previous_response_id=response.id,
+                max_output_tokens=MAX_OUTPUT_TOKENS,
+                reasoning={"effort": "low"},
+            )
     except OpenAIError as error:
         # Log details on the server; don't expose them to the browser.
         app.logger.error("OpenAI API error: %s", error)

@@ -1,0 +1,33 @@
+[
+  {
+    "type": "web_search",
+    "filters": {
+      "allowed_domains": [
+        "pubmed.ncbi.nlm.nih.gov",
+        "clinicaltrials.gov",
+        "www.who.int",
+        "www.cdc.gov",
+        "www.fda.gov"
+      ],
+      "blocked_domains": [
+        "reddit.com",
+        "quora.com",
+        "wikipedia.org"
+      ]
+    }
+  },
+  {
+    "type": "function",
+    "name": "add",
+    "description": "Add two numbers together and return the sum.",
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "a": { "type": "number", "description": "First addend." },
+        "b": { "type": "number", "description": "Second addend." }
+      },
+      "required": ["a", "b"],
+      "additionalProperties": false
+    }
+  }
+]
